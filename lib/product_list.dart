@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kgk_test/bloc/states.dart';
 import 'package:kgk_test/product_list_model.dart';
+import 'package:scroll_to_index/scroll_to_index.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'bloc/bloc.dart';
 import 'bloc/evnts.dart';
@@ -32,7 +34,24 @@ late List<ProductListModel> dataList ;
 bool isDataLoaded = false;
 List<ProductListModel> selectedProduct = [];
 int currentDataLength = 0;
+final ScrollController _controller = ScrollController();
 
+void _scrollToIndex(int index) {
+  if (index >= 0 && index < currentDataLength) { // Replace 20 with your actual list length
+    _controller.animateTo(
+      index * 100.0, // Adjust this value according to your item height
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+}
+
+@override
+void dispose() {
+  _controller.dispose();
+  super.dispose();
+}
+final double _height = 900.0;
 
 
   @override
@@ -78,34 +97,46 @@ int currentDataLength = 0;
 
           Center(
 
-              child: isDataLoaded ?SizedBox(
-                height: 900,
-                child: ListView.builder(
-                  itemCount: dataList.length,
-                    itemBuilder: (context,index){
-                    return Card(
-                      color: selectedProduct.isEmpty ? Colors.white : selectedProduct.last == dataList[index] ? Colors.red : selectedProduct.contains(dataList[index]) &&  selectedProduct.last != dataList[index]  ? Colors.blue : Colors.white ,
-                      elevation: 2,
-                      child: Column(
-                        children: [
-                          Image.network(dataList[index].image.toString(),
-                            height: 80,
-                          ),
-                    Text(dataList[index].title,style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 15
-                    ),),
-                          Text(dataList[index].title,style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 10
-                          ),),
-                        ],
-                      ),
-                    );
+              child: isDataLoaded ?Padding(
+                padding: const EdgeInsets.all(10),
+                child: SizedBox(
+                  height: _height,
+                  child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    controller: _controller,
+                    itemCount: currentDataLength,
+                      itemBuilder: (context,index){
+                      return Card(
+                        color: selectedProduct.isEmpty ? Colors.white : selectedProduct.last == dataList[index] ? Colors.red : selectedProduct.contains(dataList[index]) &&  selectedProduct.last != dataList[index]  ? Colors.blue : Colors.white ,
+                        elevation: 2,
+                        child: Column(
+                          children: [
+                            Image.network(dataList[index].image.toString(),
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.fill,
+                            ),
+                      Text(dataList[index].title,style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold
 
-
-
-                    }
+                      ),),
+                            Text(dataList[index].title,style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12
+                            ),),
+                            const SizedBox(
+                              height: 10,
+                            )
+                          ],
+                        ),
+                      );
+                
+                
+                
+                      }
+                  ),
                 ),
               ) : const CircularProgressIndicator()
           ),
@@ -119,6 +150,9 @@ int currentDataLength = 0;
               }
 
               context.read<ProductBloc>().add(ProductSelectionEvents(selectedProduct: dataList[intValue] ));
+              // _animateToIndex(intValue);
+              _scrollToIndex(intValue);
+
             },
             tooltip: 'Select',
             child: const Icon(Icons.check_box),
