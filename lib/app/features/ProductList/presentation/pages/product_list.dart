@@ -2,13 +2,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:kgk_test/bloc/states.dart';
-import 'package:kgk_test/product_list_model.dart';
-import 'package:scroll_to_index/scroll_to_index.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:kgk_test/app/core/boot_up/injection_container.dart';
+import 'package:kgk_test/app/features/ProductList/domain/use_cases/product_list_use_cases.dart';
+import 'package:kgk_test/app/features/ProductList/presentation/bloc/bloc.dart';
+import 'package:kgk_test/app/features/ProductList/presentation/bloc/evnts.dart';
+import 'package:kgk_test/app/features/ProductList/presentation/bloc/states.dart';
 
-import 'bloc/bloc.dart';
-import 'bloc/evnts.dart';
+import 'package:kgk_test/app/features/ProductList/data/models/product_list_model.dart';
+
 
 class ProductList extends StatefulWidget {
   const ProductList({super.key, required this.title});
@@ -57,7 +58,7 @@ final double _height = 900.0;
   @override
   Widget build(BuildContext context) {
 
-    return  BlocProvider(create: (context)=> ProductBloc()..add(ApiCallForProduct()),
+    return  BlocProvider(create: (context)=> ProductBloc(productsLoadUseCase: serviceLocator())..add(ApiCallForProduct()),
     child:    BlocConsumer<ProductBloc,ProductState>(
       listener: (context,state){
         if(state is LoadingStateForProducts){
@@ -82,7 +83,7 @@ final double _height = 900.0;
             actions: [
               IconButton(onPressed: (){
                 context.read<ProductBloc>().add(ShowOnlySelectedProduct(selectedProductList: selectedProduct));
-              }, icon: Icon(Icons.shopping_cart))
+              }, icon: const Icon(Icons.shopping_cart))
             ],
             // TRY THIS: Try changing the color here to a specific color (to
             // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar

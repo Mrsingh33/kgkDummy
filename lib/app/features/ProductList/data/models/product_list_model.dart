@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 
+
 List<ProductListModel> productListModelFromJson(String str) => List<ProductListModel>.from(json.decode(str).map((x) => ProductListModel.fromJson(x)));
 
 String productListModelToJson(List<ProductListModel> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
@@ -46,7 +47,10 @@ class ProductListModel {
     "image": image,
     "rating": rating.toJson(),
   };
+
+
 }
+
 
 
 

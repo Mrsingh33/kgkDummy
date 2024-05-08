@@ -1,5 +1,5 @@
-import 'package:kgk_test/product_list.dart';
-import 'package:kgk_test/product_list_model.dart';
+
+import 'package:kgk_test/app/features/ProductList/data/models/product_list_model.dart';
 
 class ProductState {}
 

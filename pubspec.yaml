@@ -39,6 +39,9 @@ dependencies:
   flutter_bloc: ^8.1.5
   scrollable_positioned_list: ^0.3.8
   scroll_to_index: ^3.0.1
+  dartz: ^0.10.1
+  get_it: ^7.6.7
+  equatable: ^2.0.5
 
 dev_dependencies:
   flutter_test:

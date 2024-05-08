@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:kgk_test/product_list.dart';
+import 'package:kgk_test/app/features/ProductList/presentation/pages/product_list.dart';
+
+import 'app/core/boot_up/injection_container.dart';
 
 void main() {
+  setUpLocator();
   runApp(const MyApp());
 }
 
