@@ -1,9 +1,10 @@
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kgk_test/app/core/boot_up/injection_container.dart';
-import 'package:kgk_test/app/features/ProductList/domain/use_cases/product_list_use_cases.dart';
+
 import 'package:kgk_test/app/features/ProductList/presentation/bloc/bloc.dart';
 import 'package:kgk_test/app/features/ProductList/presentation/bloc/evnts.dart';
 import 'package:kgk_test/app/features/ProductList/presentation/bloc/states.dart';
@@ -13,15 +14,6 @@ import 'package:kgk_test/app/features/ProductList/data/models/product_list_model
 
 class ProductList extends StatefulWidget {
   const ProductList({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -34,25 +26,18 @@ class _ProductListState extends State<ProductList> {
 late List<ProductListModel> dataList ;
 bool isDataLoaded = false;
 List<ProductListModel> selectedProduct = [];
+List<ProductListModel> oldDataList = [];
 int currentDataLength = 0;
-final ScrollController _controller = ScrollController();
+ final ScrollController _controller = ScrollController();
 
-void _scrollToIndex(int index) {
-  if (index >= 0 && index < currentDataLength) { // Replace 20 with your actual list length
-    _controller.animateTo(
-      index * 100.0, // Adjust this value according to your item height
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  }
-}
+
 
 @override
 void dispose() {
   _controller.dispose();
   super.dispose();
 }
-final double _height = 900.0;
+ double _height = 1000.0;
 
 
   @override
@@ -61,20 +46,36 @@ final double _height = 900.0;
     return  BlocProvider(create: (context)=> ProductBloc(productsLoadUseCase: serviceLocator())..add(ApiCallForProduct()),
     child:    BlocConsumer<ProductBloc,ProductState>(
       listener: (context,state){
-        if(state is LoadingStateForProducts){
+        if(state is LoadedStateForProducts){
           dataList = state.data;
+          _height = dataList.length * 120;
           currentDataLength = dataList.length;
           isDataLoaded = true;
         }
         if(state is ProductSelectedState){
           if(!selectedProduct.contains(state.selectedProduct)){
             selectedProduct.add(state.selectedProduct);
+            if (state.intValue >= 0 && state.intValue < dataList.length) {
+
+
+              _controller.animateTo(
+                state.intValue * 120.0,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+
+
+            }
+            _height = dataList.length * 100;
           }
         }
         if(state is ShowOnlySelectedStateForProducts){
+          oldDataList = dataList;
           dataList = state.data;
+          _height = dataList.length * 100;
           isDataLoaded = true;
         }
+
 
       },
       builder: (context,state) {
@@ -82,7 +83,12 @@ final double _height = 900.0;
           appBar: AppBar(
             actions: [
               IconButton(onPressed: (){
-                context.read<ProductBloc>().add(ShowOnlySelectedProduct(selectedProductList: selectedProduct));
+                if(state is ShowOnlySelectedStateForProducts){
+                  context.read<ProductBloc>().add(ShowOnlySelectedProduct(selectedProductList: oldDataList));
+                }else{
+                  context.read<ProductBloc>().add(ShowOnlySelectedProduct(selectedProductList: selectedProduct));
+                }
+
               }, icon: const Icon(Icons.shopping_cart))
             ],
             // TRY THIS: Try changing the color here to a specific color (to
@@ -105,18 +111,31 @@ final double _height = 900.0;
                   child: ListView.builder(
                     scrollDirection: Axis.vertical,
                     controller: _controller,
-                    itemCount: currentDataLength,
+                    itemCount: dataList.length,
                       itemBuilder: (context,index){
                       return Card(
-                        color: selectedProduct.isEmpty ? Colors.white : selectedProduct.last == dataList[index] ? Colors.red : selectedProduct.contains(dataList[index]) &&  selectedProduct.last != dataList[index]  ? Colors.blue : Colors.white ,
+
+                        color: selectedProduct.isEmpty ? Colors.white : selectedProduct.last == dataList[index] && state is! ShowOnlySelectedStateForProducts ? Colors.red : selectedProduct.contains(dataList[index]) &&  state is ShowOnlySelectedStateForProducts ? Colors.blue : Colors.white ,
                         elevation: 2,
                         child: Column(
                           children: [
-                            Image.network(dataList[index].image.toString(),
+                            CachedNetworkImage(
                               height: 100,
                               width: 100,
-                              fit: BoxFit.fill,
+                              imageUrl: dataList[index].image.toString(),
+                              imageBuilder: (context, imageProvider) => Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
+                                      colorFilter:
+                                      const ColorFilter.mode(Colors.red, BlendMode.colorBurn)),
+                                ),
+                              ),
+                              placeholder: (context, url) => const CircularProgressIndicator(),
+                              errorWidget: (context, url, error) => const Icon(Icons.error),
                             ),
+
                       Text(dataList[index].title,style: const TextStyle(
                           color: Colors.black,
                           fontSize: 15,
@@ -144,15 +163,17 @@ final double _height = 900.0;
           floatingActionButton: FloatingActionButton(
             onPressed: (){
 
-              var intValue = Random().nextInt(currentDataLength);
+              var intValue = Random().nextInt(dataList.length);
               if(selectedProduct.isNotEmpty){
                 dataList.removeWhere((element) => selectedProduct.last == element);
-                currentDataLength--;
+
               }
 
-              context.read<ProductBloc>().add(ProductSelectionEvents(selectedProduct: dataList[intValue] ));
+              context.read<ProductBloc>().add(ProductSelectionEvents(selectedProduct: dataList[intValue],intValue : intValue,currentDataLength : currentDataLength ));
               // _animateToIndex(intValue);
-              _scrollToIndex(intValue);
+              // _scrollToIndex(intValue);
+
+
 
             },
             tooltip: 'Select',

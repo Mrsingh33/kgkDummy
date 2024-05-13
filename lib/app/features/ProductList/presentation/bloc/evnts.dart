@@ -10,10 +10,18 @@ class ApiCallForProduct extends ProductEvents {
 }
 class ProductSelectionEvents extends ProductEvents {
 final ProductListModel selectedProduct;
-ProductSelectionEvents({required this.selectedProduct});
+final int intValue;
+final int currentDataLength;
+ProductSelectionEvents({required this.selectedProduct,required this.intValue,required this.currentDataLength});
 }
 
 class ShowOnlySelectedProduct extends ProductEvents {
   final List<ProductListModel> selectedProductList;
   ShowOnlySelectedProduct({required this.selectedProductList});
+}
+
+class ScrollToProductEvent extends ProductEvents {
+final int index;
+final int currentLength;
+ScrollToProductEvent({required this.index,required this.currentLength});
 }
